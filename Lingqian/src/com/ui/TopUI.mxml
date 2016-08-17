@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="650" initialize="onInit(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.zw.event.ZEvent;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.events.TextOperationEvent;
+			
+			private var _data:Array = [];
+			
+			private var _max:int = 0;
+			private var _file_source:FileReference;
+			
+//一级Event 
+			private var _file_target:File;
+			private function onInit($e:FlexEvent):void{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			private function onInput($e:Event=null):void{
+				var i:int = index;
+				i = Math.max(0 , i);
+				i = Math.min(max , i);
+				var evt:ZEvent = new ZEvent(ZEvent.Change , index);
+				this.dispatchEvent(evt);
+			}
+			
+			private function onClick($e:MouseEvent):void{
+				var i:int = index;
+				switch($e.target){
+					case btn_pre:
+						i--;
+						break
+					case btn_pre10:
+						i -= 10;
+						break;
+					case btn_next:
+						i++;
+						break
+					case btn_next10:
+						i += 10;
+						break
+				}
+				if(index != i){
+					index = i;
+					onInput();
+				}
+			}
+			
+			private function onInputBtn($e:MouseEvent):void{
+				if(!_file_source){
+					_file_source = new FileReference();
+					_file_source.addEventListener(Event.SELECT, onSelectSource);
+					_file_source.addEventListener(Event.COMPLETE, onLoaded);
+				}
+				var filter:FileFilter = new FileFilter("json" , "*.json");
+				_file_source.browse([filter]);
+				
+			}
+			
+			
+			private function onOutputBtn($e:MouseEvent):void{
+				if(!_file_target){
+					_file_target = new File();
+					_file_target.addEventListener(Event.SELECT , onSelectTarget);
+				}
+				_file_target.browseForDirectory("请选择要保存的位置");
+			}
+			
+//Logic
+		//读入Json
+			private function onSelectSource($e:Event):void{
+				_file_source.load();
+			}		
+			
+			private function onLoaded($e:Event):void{
+				var byteArray:ByteArray = new ByteArray();
+				byteArray = _file_source.data as ByteArray;
+				byteArray.position = 0;
+				var str:String = byteArray.readMultiByte(byteArray.length , "utf-8");
+				var o:Object = JSON.parse(str);
+				setData(o as Array);
+				this.dispatchEvent(new ZEvent(ZEvent.Update , o));
+			}
+			
+		//存储Json
+			private function onSelectTarget($e:Event):void{
+				var s1:String = JSON.stringify(_data); 
+				var f:File = new File();
+				f.url = _file_target.url + "/" + "data.json";
+				var s:FileStream = new FileStream();
+				s.open(f, FileMode.WRITE);
+				s.writeMultiByte(s1 ,"utf-8");
+				s.close();
+			}
+			
+//interface
+			public function setData($o:Object):void{
+				_data = $o as Array;
+				max = _data.length;
+			}
+			
+//getter and setter
+			private function get index():int{
+				var i:int = int(input.text); 
+				return i;
+			}
+			private function set index($val:int):void{
+				input.text = $val.toString();
+			}
+			public function get max():int{
+				return _max;
+			}
+			public function set max($val:int):void{
+				_max = $val;
+				index = Math.min($val , index);
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<s:Button id="btn_pre" x="131" label="按钮" click="onClick(event)"/>
+	<s:Button id="btn_next" x="300" label="按钮" click="onClick(event)"/>
+	<s:Button id="btn_next10" x="392" label="按钮" click="onClick(event)"/>
+	<s:Button id="btn_pre10" x="31" label="按钮" click="onClick(event)"/>
+	<s:TextInput id="input" x="226" width="50" restrict="0-9" text="0" change="onInput(event)"/>
+	<s:Label x="209" y="29" text="第"/>
+	<s:Label x="280" y="29" text="条"/>
+	<s:Button id="btn_import" x="475" label="导入" click="onInputBtn(event)"/>
+	<s:Button id="btn_output" x="567" label="导出" click="onOutputBtn(event)"/>
+</s:Group>

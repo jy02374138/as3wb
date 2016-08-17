@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:types="com.ui.types.*" xmlns:ui="com.ui.*" initialize="init(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.zw.event.ZEvent;
+			
+			import mx.events.FlexEvent;
+			
+			private var _data:Array;
+			
+			private function init($e:FlexEvent):void{
+				top.addEventListener(ZEvent.Update , onTop);
+				top.addEventListener(ZEvent.Change , onTop);
+				qian.addEventListener(ZEvent.Complete , onQian);
+			}
+			
+			private function onTop($e:ZEvent):void{
+				var o:Object = $e.data;
+				switch($e){
+					case ZEvent.Update:
+						_data = o as Array;
+						_data.sortOn("index" , Array.NUMERIC);
+						qian.data = _data.length ? _data[_data.length-1] : null
+						break;
+					case ZEvent.Change:
+						var i:int = int(o);
+						o = _data && i<_data.length ? _data[i] : null;
+						qian.data = o;
+						break;
+				}
+			}
+			
+			private function onQian($e:ZEvent):void{
+				var o:Object = $e.data;
+				_data[o.index] = o;
+				_data.sortOn("index" , Array.NUMERIC);
+				top.max = _data.length;
+			}
+		]]>
+	</fx:Script>
+	
+	<ui:TopUI id="top"/>
+	<types:UI_daxian id="qian"/>
+		
+</s:WindowedApplication>
